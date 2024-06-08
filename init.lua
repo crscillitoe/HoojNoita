@@ -1,12 +1,14 @@
-dofile_once( "data/scripts/lib/utilities.lua" )
+dofile_once("data/scripts/lib/utilities.lua")
 
-ModLuaFileAppend( "data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/data/scripts/streaming_integration/append_event_utilities.lua")
+ModLuaFileAppend("data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/files/twitch_replacement.lua")
 
-dofile( "data/scripts/streaming_integration/event_utilities.lua" )
+---@type voting_system
+local voting_system = dofile_once("mods/hoojMod/files/voting_system.lua")
 
-local pollnet = require('mods\\hoojMod\\pollnet')
-local json = require('mods\\hoojMod\\json')
+dofile("data/scripts/streaming_integration/event_utilities.lua")
 
+local pollnet = require("mods/hoojMod/pollnet")
+local json = require("mods/hoojMod/json")
 
 -- Reactor is a convenience for running Lua coroutines
 local reactor = pollnet.Reactor()
@@ -18,17 +20,17 @@ end
 function OnModInit()
 	print("Hooj - OnModInit()") -- After that this is called for all mods
 
-
 	-- Connect to hooj eventstream
 	-- https://overlay.woohooj.in/stream/?channel=events
 	reactor:run(function()
-
 		-- Dark wizard arts.
 		-- Trick  pollnet into thinking this is a tcp socket, but then just manually send
 		-- an HTTP GET and listen to the eventstream instead
 		-- IMPORTANT, HTTP messages must end with two newlines.
 		local req_sock = pollnet.open_tcp("69.55.54.58:80")
-		req_sock:send("GET /stream/?channel=simple-chat HTTP/1.1\r\nHost: overlay.woohooj.in\r\nUser-Agent: curl/7.85.0\r\nAccept: */*\r\n\r\n")
+		req_sock:send(
+			"GET /stream/?channel=simple-chat HTTP/1.1\r\nHost: overlay.woohooj.in\r\nUser-Agent: curl/7.85.0\r\nAccept: */*\r\n\r\n"
+		)
 
 		while true do
 			local response = req_sock:await()
@@ -41,13 +43,13 @@ function OnModInit()
 			local end_index = 0
 
 			local index = 1
-			for c in response:gmatch"." do
-				if (c == "{" and not found_start) then
+			for c in response:gmatch(".") do
+				if c == "{" and not found_start then
 					start_index = index
 					found_start = true
 				end
 
-				if (c == "}") then
+				if c == "}" then
 					end_index = index
 				end
 
@@ -64,7 +66,6 @@ function OnModInit()
 			local content = decoded.content
 			local author = decoded.author_id
 
-
 			print(content)
 
 			::continue::
@@ -72,11 +73,14 @@ function OnModInit()
 	end)
 end
 
-
 function OnWorldPostUpdate() -- This is called every time the game has finished updating the world
 	-- Reactor.update() enables us to
 	-- essentially run C coroutines for our eventstream
-	reactor:update()
+	-- NOTE: reenable this for real use.
+	-- reactor:update()
+
+	-- voting_system:receive_message(Random(1, 4), Random(1, 10)) -- just call this with discord content
+	voting_system:update()
 end
 
 --[[
@@ -101,4 +105,5 @@ function OnMagicNumbersAndWorldSeedInitialized() -- this is the last point where
 	local x = ProceduralRandom(0,0)
 	print( "===================================== random " .. tostring(x) )
 end
-]]--
+]]
+--
