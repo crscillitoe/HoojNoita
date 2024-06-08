@@ -1,5 +1,7 @@
 dofile_once("data/scripts/lib/utilities.lua")
 
+ModLuaFileAppend("data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/files/twitch_replacement.lua")
+
 ---@type voting_system
 local voting_system = dofile_once("mods/hoojMod/files/voting_system.lua")
 
@@ -77,8 +79,8 @@ function OnWorldPostUpdate() -- This is called every time the game has finished 
 	-- NOTE: reenable this for real use.
 	-- reactor:update()
 
+	voting_system:receive_message(Random(1, 4), Random(1, 10)) -- just call this with discord content
 	voting_system:update()
-	voting_system:receive_message(Random(1, 4), Random(1, 10))
 end
 
 --[[

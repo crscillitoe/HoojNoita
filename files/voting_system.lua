@@ -2,6 +2,7 @@ dofile_once("data/scripts/streaming_integration/event_list.lua")
 
 local VOTING_DELAY_FRAMES = 60 * 10
 local VOTING_TIME = 60 * 10
+local TIME_TO_RUN = 60 * 5
 
 ---@class voting_system
 local voting_system = {}
@@ -25,6 +26,7 @@ end
 function voting_system:clear()
 	self.time_until_event = VOTING_TIME
 	self.time_until_vote = VOTING_DELAY_FRAMES
+	self.time_until_execution = TIME_TO_RUN
 	self.vote_counts = { 0, 0, 0, 0 }
 	self.cur_events = {}
 	for _ = 1, 4 do
@@ -82,26 +84,35 @@ function voting_system:run_event()
 		end
 	end
 	GamePrintImportant(winner.ui_name, winner.ui_description)
-	for _, event in ipairs(streaming_events) do
-		if event.id == winner.id then
-			event.action(event)
-		end
-	end
+	print(winner.id)
+	self.to_run = winner.id
 end
 
 voting_system:clear()
 function voting_system:update()
 	self.gui_id = 2
-	self:render()
 	if self.time_until_vote ~= 0 then
 		self.time_until_vote = self.time_until_vote - 1
+		if self.time_until_event == 0 then
+			_streaming_on_vote_start()
+		end
 		return
 	end
 	if self.time_until_event ~= 0 then
+		self:render()
 		self.time_until_event = self.time_until_event - 1
+		if self.time_until_event == 0 then
+			self:run_event()
+		end
 		return
 	end
-	self:run_event()
+	if self.time_until_execution ~= 0 then
+		self.has_run_event = true
+		self.time_until_execution = self.time_until_execution - 1
+		return
+	end
+	print("running", self.to_run)
+	_streaming_run_event(self.to_run, "secret_handshake")
 	self:clear()
 end
 
