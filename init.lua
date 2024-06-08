@@ -79,7 +79,7 @@ function OnWorldPostUpdate() -- This is called every time the game has finished 
 	-- NOTE: reenable this for real use.
 	-- reactor:update()
 
-	voting_system:receive_message(Random(1, 4), Random(1, 10)) -- just call this with discord content
+	-- voting_system:receive_message(Random(1, 4), Random(1, 10)) -- just call this with discord content
 	voting_system:update()
 end
 

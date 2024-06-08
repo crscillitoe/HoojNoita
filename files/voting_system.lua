@@ -10,7 +10,7 @@ local voting_system = {}
 voting_system.gui = GuiCreate()
 
 ---@param vote_for integer
----@param vote_by integer
+---@param vote_by any
 function voting_system:receive_message(vote_for, vote_by)
 	if self.time_until_vote ~= 0 then
 		return
