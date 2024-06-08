@@ -1,30 +1,33 @@
-local VOTING_DELAY_FRAMES = 60 * 60
-local VOTING_TIME = 60 * 10
-dofile_once("data/scripts/streaming_integration/event_utilities.lua")
+dofile_once("data/scripts/streaming_integration/event_list.lua")
 
-local votes = {}
-votes.gui = GuiCreate()
+local VOTING_DELAY_FRAMES = 60 * 10
+local VOTING_TIME = 60 * 10
+
+---@class voting_system
+local voting_system = {}
+
+voting_system.gui = GuiCreate()
 
 ---@param vote_for integer
 ---@param vote_by integer
-function votes:receive_message(vote_for, vote_by)
+function voting_system:receive_message(vote_for, vote_by)
 	if self.time_until_vote ~= 0 then
 		return
 	end
 	if self.already_cast_vote[vote_by] then
-		return
-	end -- no spamming votes >:(
-	self.already_cast_vote[vote_by] = true
-	votes.vote_counts[vote_for] = votes.vote_counts[vote_for] + 1
+		local prev = self.already_cast_vote[vote_by]
+		self.vote_counts[prev] = self.vote_counts[prev] - 1
+	end -- change vote
+	self.already_cast_vote[vote_by] = vote_for
+	self.vote_counts[vote_for] = self.vote_counts[vote_for] + 1
 end
 
-function votes:clear()
+function voting_system:clear()
 	self.time_until_event = VOTING_TIME
-	self.time_until_vot = VOTING_DELAY_FRAMES
+	self.time_until_vote = VOTING_DELAY_FRAMES
 	self.vote_counts = { 0, 0, 0, 0 }
 	self.cur_events = {}
 	for _ = 1, 4 do
-		---@diagnostic disable-next-line: undefined-global
 		local id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
 		table.insert(
 			self.cur_events,
@@ -34,7 +37,7 @@ function votes:clear()
 	self.already_cast_vote = {}
 end
 
-function votes:clear_buffer()
+function voting_system:clear_buffer()
 	local content = GlobalsGetValue("HOOJ_STREAM_BUFFER", "")
 	---@cast content string
 	content = content:sub(2)
@@ -47,38 +50,49 @@ function votes:clear_buffer()
 	end
 end
 
-function votes:new_id()
+function voting_system:new_id()
 	self.gui_id = self.gui_id + 1
 	return self.gui_id
 end
 
-function votes:render()
+function voting_system:render()
 	GuiStartFrame(self.gui)
 	GuiZSet(self.gui, -10000)
-	GuiImageNinePiece(self.gui, self:new_id(), 0, 0, 100, 100)
+	local rx, ry = 100, 100
+	GuiImageNinePiece(self.gui, self:new_id(), rx, ry, 250, 250)
 	GuiZSet(self.gui, -10001)
 	for event_num, event in ipairs(self.cur_events) do
-		GuiText(gui,self:new_id()
+		local y = event_num * 10
+		local translated = GameTextGetTranslatedOrNot(event.ui_name)
+		GuiText(self.gui, rx, ry + y, translated)
+		local w = GuiGetTextDimensions(self.gui, translated)
+		GuiText(self.gui, 25 + rx + w, ry + y, tostring(self.vote_counts[event_num]))
 	end
 end
 
-function votes:run_event()
+function voting_system:run_event()
 	local winner
 	do
 		local winner_votes = 0
-		for event_num, event_votes in ipairs(votes.vote_counts) do
+		for event_num, event_votes in ipairs(self.vote_counts) do
 			if event_votes > winner_votes then
 				winner_votes = event_votes
-				winner = event_num
+				winner = self.cur_events[event_num]
 			end
 		end
 	end
 	GamePrintImportant(winner.ui_name, winner.ui_description)
-	winner.action(winner)
+	for _, event in ipairs(streaming_events) do
+		if event.id == winner.id then
+			event.action(event)
+		end
+	end
 end
 
-votes:clear()
-function votes:update()
+voting_system:clear()
+function voting_system:update()
+	self.gui_id = 2
+	self:render()
 	if self.time_until_vote ~= 0 then
 		self.time_until_vote = self.time_until_vote - 1
 		return
@@ -87,6 +101,8 @@ function votes:update()
 		self.time_until_event = self.time_until_event - 1
 		return
 	end
-	votes:run_event()
-	votes:clear()
+	self:run_event()
+	self:clear()
 end
+
+return voting_system
