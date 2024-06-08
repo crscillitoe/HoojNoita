@@ -15,8 +15,8 @@ function voting_system:receive_message(vote_for, vote_by)
 	if self.time_until_vote ~= 0 then
 		return
 	end
-	if self.already_cast_vote[vote_by] then
-		local prev = self.already_cast_vote[vote_by]
+	local prev = self.already_cast_vote[vote_by]
+	if prev then
 		self.vote_counts[prev] = self.vote_counts[prev] - 1
 	end -- change vote
 	self.already_cast_vote[vote_by] = vote_for
@@ -40,16 +40,26 @@ function voting_system:clear()
 end
 
 function voting_system:clear_buffer()
-	local content = GlobalsGetValue("HOOJ_STREAM_BUFFER", "")
+	local content = GlobalsGetValue("HOOJ_STREAM_BUFFER", "") or ""
+	print(tostring(content))
+	if content:len() < 2 then
+		return
+	end
 	---@cast content string
 	content = content:sub(2)
 	for part in content:gmatch("[^,]+") do
+		print(part)
 		local message = {}
 		for message_part in part:gmatch("[^;]+") do
 			table.insert(message, message_part)
 		end
-		self:receive_message(message[1], message[2])
+		local by = message[1]
+		local vote_for = tonumber(message[2] or "no")
+		if by and vote_for then
+			self:receive_message(vote_for, by)
+		end
 	end
+	GlobalsSetValue("HOOJ_STREAM_BUFFER", "")
 end
 
 function voting_system:new_id()
@@ -90,6 +100,7 @@ end
 
 voting_system:clear()
 function voting_system:update()
+	self:clear_buffer()
 	self.gui_id = 2
 	if self.time_until_vote ~= 0 then
 		self.time_until_vote = self.time_until_vote - 1
