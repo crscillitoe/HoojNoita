@@ -1,5 +1,9 @@
 dofile_once( "data/scripts/lib/utilities.lua" )
 
+ModLuaFileAppend( "data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/data/scripts/streaming_integration/append_event_utilities.lua")
+
+dofile( "data/scripts/streaming_integration/event_utilities.lua" )
+
 local pollnet = require('mods\\hoojMod\\pollnet')
 local json = require('mods\\hoojMod\\json')
 
@@ -60,7 +64,7 @@ function OnModInit()
 			local content = decoded.content
 			local author = decoded.author_id
 
-			-- TODO: Parse message for 1/2/3/4 and send to vote
+
 			print(content)
 
 			::continue::
