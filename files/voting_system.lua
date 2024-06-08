@@ -41,14 +41,14 @@ end
 
 function voting_system:clear_buffer()
 	local content = GlobalsGetValue("HOOJ_STREAM_BUFFER", "") or ""
-	print(tostring(content))
+
 	if content:len() < 2 then
 		return
 	end
+
 	---@cast content string
 	content = content:sub(2)
 	for part in content:gmatch("[^,]+") do
-		print(part)
 		local message = {}
 		for message_part in part:gmatch("[^;]+") do
 			table.insert(message, message_part)
@@ -59,6 +59,7 @@ function voting_system:clear_buffer()
 			self:receive_message(vote_for, by)
 		end
 	end
+
 	GlobalsSetValue("HOOJ_STREAM_BUFFER", "")
 end
 
@@ -93,8 +94,8 @@ function voting_system:run_event()
 			end
 		end
 	end
+
 	GamePrintImportant(winner.ui_name, winner.ui_description)
-	print(winner.id)
 	self.to_run = winner.id
 end
 
@@ -122,7 +123,7 @@ function voting_system:update()
 		self.time_until_execution = self.time_until_execution - 1
 		return
 	end
-	print("running", self.to_run)
+
 	_streaming_run_event(self.to_run, "secret_handshake")
 	self:clear()
 end

@@ -1,3 +1,5 @@
+----------------------------------------------------------------------------------------------
+
 dofile_once("data/scripts/lib/utilities.lua")
 
 ModLuaFileAppend("data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/files/twitch_replacement.lua")
@@ -13,9 +15,21 @@ local json = require("mods/hoojMod/json")
 -- Reactor is a convenience for running Lua coroutines
 local reactor = pollnet.Reactor()
 
-function OnModPreInit()
-	print("Hooj - OnModPreInit()") -- First this is called for all mods
-end
+----------------------------------------------------------------------------------------------
+
+local EVENT_STREAM_IP = "69.55.54.58"
+local EVENT_STREAM_PORT = "80"
+
+local GET_EVENT_STREAM_LINE_1 = "GET /stream/?channel=simple-chat HTTP/1.1 \r\n"
+local GET_EVENT_STREAM_LINE_2 = "Host: overlay.woohooj.in \r\n"
+local GET_EVENT_STREAM_LINE_3 = "User-Agent: noita/1.0 \r\n"
+
+-- IMPORTANT, HTTP messages must end with two newlines.
+local GET_EVENT_STREAM_LINE_4 = "Accept: */* \r\n\r\n"
+
+local GET_EVENT_STREAM_REQUEST = GET_EVENT_STREAM_LINE_1 .. GET_EVENT_STREAM_LINE_2 .. GET_EVENT_STREAM_LINE_3 .. GET_EVENT_STREAM_LINE_4
+
+----------------------------------------------------------------------------------------------
 
 function OnModInit()
 	print("Hooj - OnModInit()") -- After that this is called for all mods
@@ -24,64 +38,100 @@ function OnModInit()
 	-- https://overlay.woohooj.in/stream/?channel=events
 	reactor:run(function()
 		-- Dark wizard arts.
-		-- Trick  pollnet into thinking this is a tcp socket, but then just manually send
-		-- an HTTP GET and listen to the eventstream instead
-		-- IMPORTANT, HTTP messages must end with two newlines.
-		local req_sock = pollnet.open_tcp("69.55.54.58:80")
-		req_sock:send(
-			"GET /stream/?channel=simple-chat HTTP/1.1\r\nHost: overlay.woohooj.in\r\nUser-Agent: curl/7.85.0\r\nAccept: */*\r\n\r\n"
-		)
+		-- Trick pollnet into thinking this is a tcp socket
+		local req_sock = pollnet.open_tcp(EVENT_STREAM_IP .. ":" .. EVENT_STREAM_PORT)
 
+		-- Manually send an HTTP GET for the eventstream instead
+		req_sock:send(GET_EVENT_STREAM_REQUEST)
+
+		-- Subscribe to EventStream
 		while true do
 			local response = req_sock:await()
-			if type(response) ~= "string" then
-				goto continue
+
+			local decoded = GetJsonPayload(response)
+			if decoded ~= nil then
+				ProcessVote(decoded.content, decoded.author_id)
 			end
-
-			local found_start = false
-			local start_index = 0
-			local end_index = 0
-
-			local index = 1
-			for c in response:gmatch(".") do
-				if c == "{" and not found_start then
-					start_index = index
-					found_start = true
-				end
-
-				if c == "}" then
-					end_index = index
-				end
-
-				index = index + 1
-			end
-
-			if start_index == 0 or end_index == 0 then
-				goto continue
-			end
-
-			local payload = string.sub(response, start_index, end_index)
-			local decoded = json.decode(payload)
-
-			local content = decoded.content
-			local author = decoded.author_id
-
-			print(content)
-
-			::continue::
 		end
 	end)
 end
 
+----------------------------------------------------------------------------------------------
+
 function OnWorldPostUpdate() -- This is called every time the game has finished updating the world
 	-- Reactor.update() enables us to
 	-- essentially run C coroutines for our eventstream
-	-- NOTE: reenable this for real use.
-	-- reactor:update()
-
-	-- voting_system:receive_message(Random(1, 4), Random(1, 10)) -- just call this with discord content
+	reactor:update()
 	voting_system:update()
 end
+
+----------------------------------------------------------------------------------------------
+
+function GetJsonPayload(data)
+	--[[
+		Takes in a data payload from the EventStream, returns json decoded data
+		if present in the payload. If no data present, returns nil.
+	]]
+	local found_start = false
+	local start_index = 0
+	local end_index = 0
+
+	if type(data) ~= "string" then
+		return nil
+	end
+
+	local index = 1
+	for c in data:gmatch(".") do
+		if c == "{" and not found_start then
+			start_index = index
+			found_start = true
+		end
+
+		if c == "}" then
+			end_index = index
+		end
+
+		index = index + 1
+	end
+
+	if start_index == 0 or end_index == 0 then
+		return nil
+	end
+
+	local payload = string.sub(data, start_index, end_index)
+	return json.decode(payload)
+end
+
+----------------------------------------------------------------------------------------------
+
+function ProcessVote(content, author)
+	--[[
+		Takes in a user message and submits it as a vote if necessary
+	]]
+	if content == "1" then
+		voting_system:receive_message(1, author)
+	end
+
+	if content == "2" then
+		voting_system:receive_message(2, author)
+	end
+
+	if content == "3" then
+		voting_system:receive_message(3, author)
+	end
+
+	if content == "4" then
+		voting_system:receive_message(4, author)
+	end
+end
+
+----------------------------------------------------------------------------------------------
+
+function OnModPreInit()
+	print("Hooj - OnModPreInit()") -- First this is called for all mods
+end
+
+----------------------------------------------------------------------------------------------
 
 --[[
 
