@@ -83,7 +83,7 @@ function voting_system:render()
 end
 
 function voting_system:run_event()
-	local winner
+	local winner = self.cur_events[1]
 	do
 		local winner_votes = 0
 		for event_num, event_votes in ipairs(self.vote_counts) do
