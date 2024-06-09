@@ -103,7 +103,7 @@ function voting_system:render()
 
 	for event_num, event in ipairs(self.cur_events) do
 		local y = (event_num + 2) * 10
-		local translated = GameTextGetTranslatedOrNot(event.ui_name)
+		local translated = event_num .. " " .. GameTextGetTranslatedOrNot(event.ui_name)
 		GuiText(self.gui, 5 + rx, ry + y, translated)
 		local w = GuiGetTextDimensions(self.gui, tostring(self.vote_counts[event_num]))
 		GuiText(self.gui, window_width - (w), ry + y, tostring(self.vote_counts[event_num]))
