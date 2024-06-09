@@ -1,7 +1,12 @@
 dofile_once("data/scripts/streaming_integration/event_list.lua")
 
-local VOTING_DELAY_FRAMES = 60 * 10
-local VOTING_TIME = 60 * 10
+-- How much time between votes
+local VOTING_DELAY_FRAMES = 60 * 10 * 10
+
+-- How much time viewers have to vote
+local VOTING_TIME = 60 * 10 * 5
+
+-- Delay after vote has finished before event fires off.
 local TIME_TO_RUN = 60 * 5
 
 ---@class voting_system
@@ -29,6 +34,7 @@ function voting_system:clear()
 	self.time_until_execution = TIME_TO_RUN
 	self.vote_counts = { 0, 0, 0, 0 }
 	self.cur_events = {}
+	self.already_cast_vote = {}
 	for _ = 1, 4 do
 		local id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
 		table.insert(
@@ -36,7 +42,6 @@ function voting_system:clear()
 			{ id = id, ui_name = ui_name, ui_description = ui_description, ui_icon = ui_icon }
 		)
 	end
-	self.already_cast_vote = {}
 end
 
 function voting_system:clear_buffer()
@@ -68,19 +73,42 @@ function voting_system:new_id()
 	return self.gui_id
 end
 
+function voting_system:render_wait()
+	GuiStartFrame(self.gui)
+	GuiZSet(self.gui, -10000)
+	local rx, ry = 22, 50
+
+	local window_width = 150
+	local window_height = 20
+
+	GuiImageNinePiece(self.gui, self:new_id(), rx, ry, window_width, window_height)
+	GuiZSet(self.gui, -10001)
+	GuiText(self.gui, 35 + rx, ry + 5, "Time Until Vote: " .. self.time_until_vote)
+end
+
 function voting_system:render()
 	GuiStartFrame(self.gui)
 	GuiZSet(self.gui, -10000)
-	local rx, ry = 100, 100
-	GuiImageNinePiece(self.gui, self:new_id(), rx, ry, 250, 250)
+	local rx, ry = 22, 50
+
+	local window_width = 150
+	local window_height = 80
+
+	GuiImageNinePiece(self.gui, self:new_id(), rx, ry, window_width, window_height)
 	GuiZSet(self.gui, -10001)
+	GuiText(self.gui, 15 + rx, ry, "Vote at discord.gg/woohoojin")
+	GuiText(self.gui, 35 + rx, ry + 10, "Time Left: " .. self.time_until_event)
+	GuiText(self.gui, 15 + rx, ry + 20, "--------------------")
+
+
 	for event_num, event in ipairs(self.cur_events) do
-		local y = event_num * 10
+		local y = (event_num + 2) * 10
 		local translated = GameTextGetTranslatedOrNot(event.ui_name)
-		GuiText(self.gui, rx, ry + y, translated)
-		local w = GuiGetTextDimensions(self.gui, translated)
-		GuiText(self.gui, 25 + rx + w, ry + y, tostring(self.vote_counts[event_num]))
+		GuiText(self.gui, 5 + rx, ry + y, translated)
+		local w = GuiGetTextDimensions(self.gui, tostring(self.vote_counts[event_num]))
+		GuiText(self.gui, window_width - (w), ry + y, tostring(self.vote_counts[event_num]))
 	end
+
 end
 
 function voting_system:run_event()
@@ -99,17 +127,23 @@ function voting_system:run_event()
 	self.to_run = winner.id
 end
 
-voting_system:clear()
 function voting_system:update()
 	self:clear_buffer()
 	self.gui_id = 2
+
+	if self.time_until_vote == nil then
+		return
+	end
+
 	if self.time_until_vote ~= 0 then
+		self:render_wait()
 		self.time_until_vote = self.time_until_vote - 1
 		if self.time_until_event == 0 then
 			_streaming_on_vote_start()
 		end
 		return
 	end
+
 	if self.time_until_event ~= 0 then
 		self:render()
 		self.time_until_event = self.time_until_event - 1
@@ -118,6 +152,7 @@ function voting_system:update()
 		end
 		return
 	end
+
 	if self.time_until_execution ~= 0 then
 		self.has_run_event = true
 		self.time_until_execution = self.time_until_execution - 1

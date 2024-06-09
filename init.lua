@@ -7,6 +7,8 @@ ModLuaFileAppend("data/scripts/streaming_integration/event_utilities.lua", "mods
 ---@type voting_system
 local voting_system = dofile_once("mods/hoojMod/files/voting_system.lua")
 
+
+
 dofile("data/scripts/streaming_integration/event_utilities.lua")
 
 local pollnet = require("mods/hoojMod/pollnet")
@@ -133,6 +135,12 @@ end
 
 ----------------------------------------------------------------------------------------------
 
+function OnWorldInitialized() -- This is called once the game world is initialized. Doesn't ensure any world chunks actually exist. Use OnPlayerSpawned to ensure the chunks around player have been loaded or created.
+	voting_system:clear()
+end
+
+----------------------------------------------------------------------------------------------
+
 --[[
 
 function OnModPostInit()
@@ -143,9 +151,6 @@ function OnPlayerSpawned( player_entity ) -- This runs when player entity has be
 	GamePrint( "OnPlayerSpawned() - Player entity id: " .. tostring(player_entity) )
 end
 
-function OnWorldInitialized() -- This is called once the game world is initialized. Doesn't ensure any world chunks actually exist. Use OnPlayerSpawned to ensure the chunks around player have been loaded or created.
-	GamePrint( "OnWorldInitialized() " .. tostring(GameGetFrameNum()) )
-end
 
 function OnWorldPreUpdate() -- This is called every time the game is about to start updating the world
 	GamePrint( "Pre-update hook " .. tostring(GameGetFrameNum()) )
