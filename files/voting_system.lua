@@ -1,7 +1,7 @@
 dofile_once("data/scripts/streaming_integration/event_list.lua")
 
 -- How much time between votes
-local VOTING_DELAY_FRAMES = 60 * 10 * 10
+local VOTING_DELAY_FRAMES = 60 * 10
 
 -- How much time viewers have to vote
 local VOTING_TIME = 60 * 10 * 5

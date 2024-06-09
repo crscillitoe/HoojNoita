@@ -50,7 +50,7 @@ function OnModInit()
 
 			local decoded = GetJsonPayload(response)
 			if decoded ~= nil then
-				print(decoded)
+				print(response)
 				ProcessVote(decoded.content, decoded.author_id)
 			end
 		end
