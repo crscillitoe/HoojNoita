@@ -4,10 +4,10 @@ dofile_once("data/scripts/streaming_integration/event_list.lua")
 local VOTING_DELAY_FRAMES = 60 * 10
 
 -- How much time viewers have to vote
-local VOTING_TIME = 60 * 10 * 5
+local VOTING_TIME = 60 * 10 * 1
 
 -- Delay after vote has finished before event fires off.
-local TIME_TO_RUN = 60 * 5
+local TIME_TO_RUN = 60 * 1
 
 ---@class voting_system
 local voting_system = {}
@@ -35,8 +35,13 @@ function voting_system:clear()
 	self.vote_counts = { 0, 0, 0, 0 }
 	self.cur_events = {}
 	self.already_cast_vote = {}
+	local used_ids = {}
 	for _ = 1, 4 do
 		local id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
+		while used_ids[id] do -- stop duplicate vote options
+			id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
+			used_ids[id] = true
+		end
 		table.insert(
 			self.cur_events,
 			{ id = id, ui_name = ui_name, ui_description = ui_description, ui_icon = ui_icon }

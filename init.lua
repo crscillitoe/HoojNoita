@@ -109,20 +109,9 @@ function ProcessVote(content, author)
 	--[[
 		Takes in a user message and submits it as a vote if necessary
 	]]
-	if content == "1" then
-		voting_system:receive_message(1, author)
-	end
-
-	if content == "2" then
-		voting_system:receive_message(2, author)
-	end
-
-	if content == "3" then
-		voting_system:receive_message(3, author)
-	end
-
-	if content == "4" then
-		voting_system:receive_message(4, author)
+	local number_content = tonumber(content)
+	if number_content and number_content > 0 and number_content < 5 then
+		voting_system:receive_message(number_content, author)
 	end
 end
 
