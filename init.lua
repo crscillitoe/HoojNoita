@@ -2,8 +2,6 @@
 
 dofile_once("data/scripts/lib/utilities.lua")
 
-ModLuaFileAppend("data/scripts/streaming_integration/event_utilities.lua", "mods/hoojMod/files/twitch_replacement.lua")
-
 ---@type voting_system
 local voting_system = dofile_once("mods/hoojMod/files/voting_system.lua")
 
@@ -52,6 +50,7 @@ function OnModInit()
 
 			local decoded = GetJsonPayload(response)
 			if decoded ~= nil then
+				print(decoded)
 				ProcessVote(decoded.content, decoded.author_id)
 			end
 		end

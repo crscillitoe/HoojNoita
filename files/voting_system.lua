@@ -76,7 +76,8 @@ end
 function voting_system:render_wait()
 	GuiStartFrame(self.gui)
 	GuiZSet(self.gui, -10000)
-	local rx, ry = 22, 50
+	local sw, sh = GuiGetScreenDimensions(self.gui)
+	local rx, ry = sw - 172, sh - 50
 
 	local window_width = 150
 	local window_height = 20
@@ -89,7 +90,8 @@ end
 function voting_system:render()
 	GuiStartFrame(self.gui)
 	GuiZSet(self.gui, -10000)
-	local rx, ry = 22, 50
+	local sw, sh = GuiGetScreenDimensions(self.gui)
+	local rx, ry = sw - 172, sh - 110
 
 	local window_width = 150
 	local window_height = 80
@@ -104,9 +106,9 @@ function voting_system:render()
 	for event_num, event in ipairs(self.cur_events) do
 		local y = (event_num + 2) * 10
 		local translated = GameTextGetTranslatedOrNot(event.ui_name)
-		GuiText(self.gui, 5 + rx, ry + y, translated)
+		GuiText(self.gui, 5 + rx, ry + y, tostring(event_num) .. ") ".. translated)
 		local w = GuiGetTextDimensions(self.gui, tostring(self.vote_counts[event_num]))
-		GuiText(self.gui, window_width - (w), ry + y, tostring(self.vote_counts[event_num]))
+		GuiText(self.gui, rx + window_width - (w), ry + y, tostring(self.vote_counts[event_num]))
 	end
 
 end
