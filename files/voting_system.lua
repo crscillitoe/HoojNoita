@@ -2,12 +2,19 @@ dofile_once("data/scripts/streaming_integration/event_list.lua")
 
 -- How much time between votes
 local VOTING_DELAY_FRAMES = 60 * 10
-
 -- How much time viewers have to vote
-local VOTING_TIME = 60 * 10 * 1
-
+local VOTING_TIME
 -- Delay after vote has finished before event fires off.
-local TIME_TO_RUN = 60 * 1
+local TIME_TO_RUN
+if DebugGetIsDevBuild() then
+	VOTING_TIME = 60 * 10 * 1
+
+	TIME_TO_RUN = 60 * 1
+else
+	VOTING_TIME = 60 * 10 * 30
+
+	TIME_TO_RUN = 60 * 5
+end
 
 ---@class voting_system
 local voting_system = {}
