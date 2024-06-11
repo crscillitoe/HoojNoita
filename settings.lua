@@ -27,8 +27,12 @@ function mod_setting_change_callback( mod_id, gui, in_main_menu, setting, old_va
 	print( tostring(new_value) )
 end
 
-local mod_id = "example" -- This should match the name of your mod's folder.
+local mod_id = "hoojMod" -- This should match the name of your mod's folder.
 mod_settings_version = 1 -- This is a magic global that can be used to migrate settings to new mod versions. call mod_settings_get_version() before mod_settings_update() to get the old value. 
+mod_settings = 
+{
+}
+--[[
 mod_settings = 
 {
 	{
@@ -169,6 +173,7 @@ mod_settings =
 		},
 	},
 }
+]]
 
 -- This function is called to ensure the correct setting values are visible to the game via ModSettingGet(). your mod's settings don't work if you don't have a function like this defined in settings.lua.
 -- This function is called:
