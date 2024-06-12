@@ -11,13 +11,17 @@ if DebugGetIsDevBuild() then
 
 	TIME_TO_RUN = 60 * 1
 else
-	VOTING_TIME = 60 * 10 * 30
+	VOTING_TIME = 60 * 10 * 10
 
 	TIME_TO_RUN = 60 * 5
 end
 
 ---@class voting_system
 local voting_system = {}
+
+local blacklisted_events = { -- ID's of mods to be blacklisted, get from data/scripts/streaming_integration/event_list.lua
+	["TWITCHY"] = true
+}
 
 voting_system.gui = GuiCreate()
 
@@ -45,7 +49,7 @@ function voting_system:clear()
 	local used_ids = {}
 	for _ = 1, 4 do
 		local id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
-		while used_ids[id] do -- stop duplicate vote options
+		while used_ids[id] or blacklisted_events[id] do -- stop duplicate vote options
 			id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
 			used_ids[id] = true
 		end
