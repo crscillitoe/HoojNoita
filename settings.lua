@@ -1,4 +1,5 @@
 dofile("data/scripts/lib/mod_settings.lua") -- see this file for documentation on some of the features.
+dofile_once("data/scripts/streaming_integration/event_list.lua")
 
 -- This file can't access other files from this or other mods in all circumstances.
 -- Settings will be automatically saved.
@@ -23,15 +24,39 @@ function mod_setting_bool_custom( mod_id, gui, in_main_menu, im_id, setting )
 	mod_setting_tooltip( mod_id, gui, in_main_menu, setting )
 end
 
+settings = {
+	
+}
+
 function mod_setting_change_callback( mod_id, gui, in_main_menu, setting, old_value, new_value  )
-	print( tostring(new_value) )
+	ModSettingSet("hoojMod_EVENT_ENABLED_"..setting.id, new_value)
 end
 
 local mod_id = "hoojMod" -- This should match the name of your mod's folder.
 mod_settings_version = 1 -- This is a magic global that can be used to migrate settings to new mod versions. call mod_settings_get_version() before mod_settings_update() to get the old value. 
 mod_settings = 
 {
+	{
+		category_id = "Enabled & Disable",
+		ui_name = "BLACKLIST",
+		ui_description = "Enable and disable certain events.",
+		settings = {
+
+		}
+	}
 }
+
+for _,event in next, streaming_events do -- adds all the events to the settings
+	local setting = {
+		id = event.id,
+		ui_name = GameTextGetTranslatedOrNot(event.ui_name),
+		ui_description = GameTextGetTranslatedOrNot(event.ui_description),
+		value_default = true,
+		change_fn = mod_setting_change_callback
+	}
+	table.insert(mod_settings[1].settings, setting)
+	settings[event.id] = true
+end
 --[[
 mod_settings = 
 {

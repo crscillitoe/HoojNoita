@@ -1,16 +1,16 @@
 ----------------------------------------------------------------------------------------------
+local DIRECTORY = "mods/hoojMod/"
 
 dofile_once("data/scripts/lib/utilities.lua")
+dofile(DIRECTORY.."settings.lua")
 
 ---@type voting_system
-local voting_system = dofile_once("mods/hoojMod/files/voting_system.lua")
-
-
+local voting_system = dofile_once(DIRECTORY.."files/voting_system.lua")
 
 dofile("data/scripts/streaming_integration/event_utilities.lua")
 
-local pollnet = require("mods/hoojMod/pollnet")
-local json = require("mods/hoojMod/json")
+local pollnet = require(DIRECTORY.."pollnet")
+local json = require(DIRECTORY.."json")
 
 ----------------------------------------------------------------------------------------------
 
@@ -107,6 +107,15 @@ function ProcessVote(content, author)
 	if number_content and number_content > 0 and number_content < 5 then
 		voting_system:receive_message(number_content, author)
 	end
+end
+
+----------------------------------------------------------------------------------------------
+
+function is_event_enabled(event_id)
+	--[[
+		Takes in an event ID and returns if it is enabled or not so that we don't cast disabled events to vote.
+	]]
+    return ModSettingGet("hoojMod_EVENT_ENABLED_"..event_id)
 end
 
 ----------------------------------------------------------------------------------------------
