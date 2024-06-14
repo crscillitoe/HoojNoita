@@ -111,15 +111,6 @@ end
 
 ----------------------------------------------------------------------------------------------
 
-function is_event_enabled(event_id)
-	--[[
-		Takes in an event ID and returns if it is enabled or not so that we don't cast disabled events to vote.
-	]]
-    return ModSettingGet("hoojMod_EVENT_ENABLED_"..event_id)
-end
-
-----------------------------------------------------------------------------------------------
-
 function OnModPreInit()
 	print("Hooj - OnModPreInit()") -- First this is called for all mods
 end

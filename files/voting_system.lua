@@ -42,7 +42,7 @@ function voting_system:get_event_for_vote()
     local id, ui_name, ui_description, ui_icon
 
     repeat
-        id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
+    	id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
     until is_event_enabled(id)
 
     return id, ui_name, ui_description, ui_icon
@@ -91,6 +91,18 @@ function voting_system:clear_buffer()
 	end
 
 	GlobalsSetValue("HOOJ_STREAM_BUFFER", "")
+end
+
+function is_event_enabled(event_id)
+	--[[
+		Takes in an event ID and returns if it is enabled or not so that we don't cast disabled events to vote.
+	]]
+	local modEnabled = ModSettingGet("hoojMod_EVENT_ENABLED_"..event_id)
+	if modEnabled == nil then
+		return true
+	end
+
+    return modEnabled
 end
 
 function voting_system:new_id()
