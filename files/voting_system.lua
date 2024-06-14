@@ -13,9 +13,9 @@ if DebugGetIsDevBuild() then
 
 	TIME_TO_RUN = 60 * 1
 else
-	VOTING_TIME = 60 * 10 * 10
+	VOTING_TIME = 60 * 10 * 3
 
-	TIME_TO_RUN = 60 * 5
+	TIME_TO_RUN = 60 * 2
 end
 
 ---@class voting_system
