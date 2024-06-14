@@ -1,18 +1,28 @@
 dofile_once("data/scripts/streaming_integration/event_list.lua")
 
+
+
 -- How much time between votes
 local VOTING_DELAY_FRAMES = 60 * 10
-
 -- How much time viewers have to vote
-local VOTING_TIME = 60 * 10 * 1
-
+local VOTING_TIME
 -- Delay after vote has finished before event fires off.
-local TIME_TO_RUN = 60 * 1
+local TIME_TO_RUN
+if DebugGetIsDevBuild() then
+	VOTING_TIME = 60 * 10 * 1
+
+	TIME_TO_RUN = 60 * 1
+else
+	VOTING_TIME = 60 * 10 * 10
+
+	TIME_TO_RUN = 60 * 5
+end
 
 ---@class voting_system
 local voting_system = {}
 
 voting_system.gui = GuiCreate()
+voting_system.events = {}
 
 ---@param vote_for integer
 ---@param vote_by any
@@ -28,6 +38,16 @@ function voting_system:receive_message(vote_for, vote_by)
 	self.vote_counts[vote_for] = self.vote_counts[vote_for] + 1
 end
 
+function voting_system:get_event_for_vote()
+    local id, ui_name, ui_description, ui_icon
+
+    repeat
+        id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
+    until is_event_enabled(id)
+
+    return id, ui_name, ui_description, ui_icon
+end
+
 function voting_system:clear()
 	self.time_until_event = VOTING_TIME
 	self.time_until_vote = VOTING_DELAY_FRAMES
@@ -37,9 +57,9 @@ function voting_system:clear()
 	self.already_cast_vote = {}
 	local used_ids = {}
 	for _ = 1, 4 do
-		local id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
-		while used_ids[id] do -- stop duplicate vote options
-			id, ui_name, ui_description, ui_icon = _streaming_get_event_for_vote()
+		local id, ui_name, ui_description, ui_icon = self:get_event_for_vote()
+		while used_ids[id] do
+			id, ui_name, ui_description, ui_icon = self:get_event_for_vote()
 			used_ids[id] = true
 		end
 		table.insert(
