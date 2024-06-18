@@ -60,8 +60,8 @@ function voting_system:clear()
 		local id, ui_name, ui_description, ui_icon = self:get_event_for_vote()
 		while used_ids[id] do
 			id, ui_name, ui_description, ui_icon = self:get_event_for_vote()
-			used_ids[id] = true
 		end
+		used_ids[id] = true
 		table.insert(
 			self.cur_events,
 			{ id = id, ui_name = ui_name, ui_description = ui_description, ui_icon = ui_icon }
